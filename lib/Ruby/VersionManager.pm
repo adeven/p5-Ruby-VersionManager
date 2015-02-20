@@ -94,7 +94,6 @@ sub _check_installed {
 }
 
 sub updatedb {
-    no if $] >= 5.018, warnings => "experimental::smartmatch";
     my ($self) = @_;
 
     my @versions = qw( 1.8 1.9 2.0 2.1 );
@@ -199,7 +198,6 @@ sub gem {
 }
 
 sub switch_gemset {
-    no if $] >= 5.018, warnings => "experimental::smartmatch";
     my ( $self, $gemset ) = @_;
 
     if ( $ENV{RUBY_VERSION} && $gemset ) {
@@ -222,7 +220,6 @@ sub switch_gemset {
 }
 
 sub gemsets {
-    no if $] >= 5.018, warnings => "experimental::smartmatch";
     my $self = shift;
 
     my @gemsets = ();
@@ -330,7 +327,6 @@ sub _guess_version {
 }
 
 sub install {
-    no if $] >= 5.018, warnings => "experimental::smartmatch";
     my ($self) = @_;
 
     $self->ruby_version( $self->_guess_version );
