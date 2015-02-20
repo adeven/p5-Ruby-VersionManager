@@ -112,7 +112,7 @@ sub updatedb {
 
         if ( $res->is_success ) {
             $rubies->{$version} = [];
-            for ( grep { $_ ~~ /ruby.*\.tar\.bz2/ } split '\n', $res->content ) {
+            for ( grep { /ruby.*\.tar\.bz2/ } split '\n', $res->content ) {
                 my $at = $self->archive_type;
                 ( my $ruby = $_ ) =~ s/(.*)$at/$1/;
                 push @{ $rubies->{$version} }, ( split ' ', $ruby )[-1];
@@ -210,7 +210,7 @@ sub switch_gemset {
 
         my $installed = $self->installed_rubies->{$major_version};
 
-        if ( $self->ruby_version ~~ @$installed ) {
+        if ( grep { /$self->ruby_version/ } @$installed ) {
             $self->gemset($gemset);
             $self->_setup_environment;
 
@@ -235,7 +235,7 @@ sub gemsets {
 
         my $installed = $self->installed_rubies->{$major_version};
 
-        if ( $self->ruby_version ~~ @$installed ) {
+        if ( grep { /$self->ruby_version/ } @$installed ) {
             my $dir = File::Spec->catdir( $self->rootdir, 'gemsets', $self->major_version, $self->ruby_version );
             opendir my $dh, $dir || die "Could not open $dir.";
 
@@ -339,7 +339,7 @@ sub install {
 
     my $ruby      = $self->ruby_version;
     my $installed = 0;
-    $installed = 1 if join ' ', @{ $self->installed_rubies->{$major_version} } ~~ /$ruby/;
+    $installed = 1 if join ' ', grep { /$ruby/ } @{ $self->installed_rubies->{$major_version} };
 
     if ( not $installed ) {
         $self->_fetch_ruby;
