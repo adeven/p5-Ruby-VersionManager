@@ -10,6 +10,8 @@ use Ruby::VersionManager;
 my $action  = shift;
 my @options = @ARGV;
 
+$ENV{'FTP_PASSIVE'} = 1;
+
 die "No action defined." unless $action;
 
 my $rvm = Ruby::VersionManager->new();
