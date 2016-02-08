@@ -96,7 +96,7 @@ sub _check_installed {
 sub updatedb {
     my ($self) = @_;
 
-    my @versions = qw( 1.8 1.9 2.0 2.1 );
+    my @versions = qw( 1.8 1.9 2.0 2.1 2.2 2.3 );
 
     my $rubies = {};
 
