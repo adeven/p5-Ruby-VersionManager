@@ -208,7 +208,7 @@ sub switch_gemset {
 
         my $installed = $self->installed_rubies->{$major_version};
 
-        if ( grep { /$self->ruby_version/ } @$installed ) {
+        if ( grep { qr/\Q$self->ruby_version/ } @$installed ) {
             $self->gemset($gemset);
             $self->_setup_environment;
 
@@ -232,7 +232,7 @@ sub gemsets {
 
         my $installed = $self->installed_rubies->{$major_version};
 
-        if ( grep { /$self->ruby_version/ } @$installed ) {
+        if ( grep { qr/\Q$self->ruby_version/ } @$installed ) {
             my $dir = File::Spec->catdir( $self->rootdir, 'gemsets', $self->major_version, $self->ruby_version );
             opendir my $dh, $dir || die "Could not open $dir.";
 
@@ -335,7 +335,7 @@ sub install {
 
     my $ruby      = $self->ruby_version;
     my $installed = 0;
-    $installed = 1 if join ' ', grep { /$ruby/ } @{ $self->installed_rubies->{$major_version} };
+    $installed = 1 if join ' ', grep { qr/\Q$ruby/ } @{ $self->installed_rubies->{$major_version} };
 
     if ( not $installed ) {
         $self->_fetch_ruby;
