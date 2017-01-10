@@ -29,7 +29,9 @@ my $dispatch_table = {
         $rvm->gem(@options);
     },
     gemset => sub {
-        die "No ruby version installed or current version not maintained by rvm.pl" unless $rvm->switch_gemset(@options);
+        my $gemset = shift @options;
+
+        die "No ruby version installed or current version not maintained by rvm.pl" unless $rvm->switch_gemset($gemset, \@options);
     },
     gemsets => sub {
         say for $rvm->gemsets;

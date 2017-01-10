@@ -198,7 +198,7 @@ sub gem {
 }
 
 sub switch_gemset {
-    my ( $self, $gemset ) = @_;
+    my ( $self, $gemset, $options ) = @_;
 
     if ( $ENV{RUBY_VERSION} && $gemset ) {
         $self->ruby_version( $ENV{RUBY_VERSION} );
@@ -213,7 +213,7 @@ sub switch_gemset {
             $self->gemset($gemset);
             $self->_setup_environment;
 
-            $self->_sub_shell;
+            $self->_sub_shell($options);
         }
     }
 
@@ -437,11 +437,15 @@ sub _clean_path {
 }
 
 sub _sub_shell {
-    my $self  = shift;
+    my $self = shift;
+    my $args = shift;
     my $shell = $ENV{SHELL};
 
-    if ($shell) {
-        say "launching subshell with new settings.";
+    if (defined $args && scalar @{$args}) {
+        my $command = join(' ', map { $_ =~ s/'/'\\''/gr } @{$args});
+        exec("$shell -c '$command'");
+    } elsif ($shell) {
+        say "launching subshell `$shell' with new settings.";
         exec($shell);
     }
 }
