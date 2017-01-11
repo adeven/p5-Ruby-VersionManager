@@ -202,6 +202,7 @@ sub switch_gemset {
 
     if ( $ENV{RUBY_VERSION} && $gemset ) {
         $self->ruby_version( $ENV{RUBY_VERSION} );
+        $self->ruby_version( $self->_guess_version );
         ( my $major_version = $self->ruby_version ) =~ s/ruby-(\d\.\d).*/$1/;
         $self->major_version($major_version);
         $self->_check_installed;
@@ -226,6 +227,7 @@ sub gemsets {
 
     if ( $ENV{RUBY_VERSION} ) {
         $self->ruby_version( $ENV{RUBY_VERSION} );
+        $self->ruby_version( $self->_guess_version );
         ( my $major_version = $self->ruby_version ) =~ s/ruby-(\d\.\d).*/$1/;
         $self->major_version($major_version);
         $self->_check_installed;
