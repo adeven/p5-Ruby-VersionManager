@@ -408,6 +408,10 @@ sub _setup_environment {
       . ':'
       . $ENV{PATH};
 
+    File::Path::make_path($ENV{GEM_PATH}, {mode => 0700});
+    File::Path::make_path($ENV{GEM_HOME}, {mode => 0700}) unless ( $ENV{GEM_PATH} eq $ENV{GEM_HOME} );
+    File::Path::make_path($ENV{MY_RUBY_HOME}, {mode => 0700});
+
     open my $rcfile, '>', File::Spec->catfile( $self->rootdir, 'var', 'ruby_vmanager.rc' );
     say $rcfile 'export RUBY_VERSION=' . $self->ruby_version;
     say $rcfile 'export GEM_PATH=' . $ENV{GEM_PATH};
