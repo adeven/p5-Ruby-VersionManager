@@ -198,21 +198,22 @@ sub gem {
 }
 
 sub switch_gemset {
-    my ( $self, $gemset ) = @_;
+    my ( $self, $gemset, $options ) = @_;
 
     if ( $ENV{RUBY_VERSION} && $gemset ) {
         $self->ruby_version( $ENV{RUBY_VERSION} );
+        $self->ruby_version( $self->_guess_version );
         ( my $major_version = $self->ruby_version ) =~ s/ruby-(\d\.\d).*/$1/;
         $self->major_version($major_version);
         $self->_check_installed;
 
         my $installed = $self->installed_rubies->{$major_version};
 
-        if ( grep { /$self->ruby_version/ } @$installed ) {
+        if ( grep { qr/\Q$self->ruby_version/ } @$installed ) {
             $self->gemset($gemset);
             $self->_setup_environment;
 
-            $self->_sub_shell;
+            $self->_sub_shell($options);
         }
     }
 
@@ -226,13 +227,14 @@ sub gemsets {
 
     if ( $ENV{RUBY_VERSION} ) {
         $self->ruby_version( $ENV{RUBY_VERSION} );
+        $self->ruby_version( $self->_guess_version );
         ( my $major_version = $self->ruby_version ) =~ s/ruby-(\d\.\d).*/$1/;
         $self->major_version($major_version);
         $self->_check_installed;
 
         my $installed = $self->installed_rubies->{$major_version};
 
-        if ( grep { /$self->ruby_version/ } @$installed ) {
+        if ( grep { qr/\Q$self->ruby_version/ } @$installed ) {
             my $dir = File::Spec->catdir( $self->rootdir, 'gemsets', $self->major_version, $self->ruby_version );
             opendir my $dh, $dir || die "Could not open $dir.";
 
@@ -335,7 +337,7 @@ sub install {
 
     my $ruby      = $self->ruby_version;
     my $installed = 0;
-    $installed = 1 if join ' ', grep { /$ruby/ } @{ $self->installed_rubies->{$major_version} };
+    $installed = 1 if join ' ', grep { qr/\Q$ruby/ } @{ $self->installed_rubies->{$major_version} };
 
     if ( not $installed ) {
         $self->_fetch_ruby;
@@ -406,6 +408,10 @@ sub _setup_environment {
       . ':'
       . $ENV{PATH};
 
+    File::Path::make_path($ENV{GEM_PATH}, {mode => 0700});
+    File::Path::make_path($ENV{GEM_HOME}, {mode => 0700}) unless ( $ENV{GEM_PATH} eq $ENV{GEM_HOME} );
+    File::Path::make_path($ENV{MY_RUBY_HOME}, {mode => 0700});
+
     open my $rcfile, '>', File::Spec->catfile( $self->rootdir, 'var', 'ruby_vmanager.rc' );
     say $rcfile 'export RUBY_VERSION=' . $self->ruby_version;
     say $rcfile 'export GEM_PATH=' . $ENV{GEM_PATH};
@@ -435,11 +441,15 @@ sub _clean_path {
 }
 
 sub _sub_shell {
-    my $self  = shift;
+    my $self = shift;
+    my $args = shift;
     my $shell = $ENV{SHELL};
 
-    if ($shell) {
-        say "launching subshell with new settings.";
+    if (defined $args && scalar @{$args}) {
+        my $command = join(' ', map { $_ =~ s/'/'\\''/gr } @{$args});
+        exec("$shell -c '$command'");
+    } elsif ($shell) {
+        say "launching subshell `$shell' with new settings.";
         exec($shell);
     }
 }
