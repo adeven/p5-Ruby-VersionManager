@@ -4,7 +4,7 @@ rvm.pl
 
 # WARNING!
 
-This is an unstable development release not ready for production!
+This is an unstable development release not ready for production, unless it is!
 
 # VERSION
 

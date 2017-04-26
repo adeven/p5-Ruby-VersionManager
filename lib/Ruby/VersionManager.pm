@@ -96,13 +96,13 @@ sub _check_installed {
 sub updatedb {
     my ($self) = @_;
 
-    my @versions = qw( 1.8 1.9 2.0 2.1 2.2 2.3 );
+    my @versions = qw/1.8 1.9 2.0 2.1 2.2 2.3 2.4/;
 
     my $rubies = {};
 
     for my $version (@versions) {
-        my $ruby_ftp = 'ftp://ftp.ruby-lang.org/pub/ruby/' . $version;
-        my $req = HTTP::Request->new( GET => $ruby_ftp );
+        my $ruby_uri = "https://cache.ruby-lang.org/pub/ruby/$version/";
+        my $req = HTTP::Request->new( GET => $ruby_uri );
 
         my $ua = LWP::UserAgent->new;
         $ua->agent( $self->agent_string );
@@ -111,10 +111,9 @@ sub updatedb {
 
         if ( $res->is_success ) {
             $rubies->{$version} = [];
-            for ( grep { /ruby.*\.tar\.bz2/ } split '\n', $res->content ) {
-                my $at = $self->archive_type;
-                ( my $ruby = $_ ) =~ s/(.*)$at/$1/;
-                push @{ $rubies->{$version} }, ( split ' ', $ruby )[-1];
+            for my $line (split "\n", $res->decoded_content) {
+                next unless ($line =~ m/['\"](ruby.*?)\.tar\.bz2['\"]/);
+                push @{ $rubies->{$version} }, ( split ' ', $1 )[-1];
             }
         }
     }
@@ -293,7 +292,7 @@ sub _guess_version {
     my @rubies      = ();
     my $req_version = $self->ruby_version;
 
-    # 1.8 or 1.9?
+    # 1.8 or 1.9 or else?
     for my $major_version ( keys %{ $self->available_rubies } ) {
         if ( $req_version =~ /$major_version/ ) {
             for my $ruby ( @{ $self->available_rubies->{$major_version} } ) {
