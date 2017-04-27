@@ -339,8 +339,8 @@ sub install {
     $installed = 1 if join ' ', grep { qr/\Q$ruby/ } @{ $self->installed_rubies->{$major_version} };
 
     if ( not $installed ) {
-        $self->_fetch_ruby;
-        $self->_unpack_ruby;
+        $self->_fetch_ruby(overwrite => 1);
+        $self->_unpack_ruby(tidyup => 1);
         $self->_make_install;
     }
 
@@ -363,9 +363,13 @@ sub _update_installed {
 }
 
 sub _unpack_ruby {
-    my ($self) = @_;
+    my ($self, %opts) = @_;
+    my $base = File::Spec->catdir( $self->rootdir, 'source' );
+    my $work = File::Spec->catdir( $base, $self->ruby_version );
 
-    system 'tar xf ' . File::Spec->catfile( $self->rootdir, 'source', $self->ruby_version . $self->archive_type ) . ' -C  ' . File::Spec->catdir( $self->rootdir, 'source' );
+    File::Path::rmtree($work) if $opts{tidyup} && -d $work;
+
+    system 'tar xf ' . File::Spec->catfile( $self->rootdir, 'source', $self->ruby_version . $self->archive_type ) . ' -C  ' . $base;
 
     return 1;
 }
@@ -454,14 +458,18 @@ sub _sub_shell {
 }
 
 sub _fetch_ruby {
-    my ($self) = @_;
+    my ($self, %opts) = @_;
 
     my $url = 'ftp://ftp.ruby-lang.org/pub/ruby/' . $self->major_version . '/' . $self->ruby_version . $self->archive_type;
 
     my $file = File::Spec->catfile( $self->rootdir, 'source', $self->ruby_version . $self->archive_type );
 
     if ( -f $file ) {
-        return 1;
+        if ( $opts{overwrite} ) {
+            unlink $file or die "Could not unlink $file: $!";
+        } else {
+            return 1;
+        }
     }
 
     my $result = LWP::Simple::getstore( $url, $file );
