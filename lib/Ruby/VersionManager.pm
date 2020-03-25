@@ -30,6 +30,8 @@ has version          => ( is => 'rw' );
 
 our $VERSION = 0.004003;
 
+our $ruby_cache = 'https://cache.ruby-lang.org/pub/ruby/';
+
 sub BUILD {
     my ($self) = @_;
 
@@ -96,12 +98,12 @@ sub _check_installed {
 sub updatedb {
     my ($self) = @_;
 
-    my @versions = qw/1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.7/;
+    my @versions = qw/1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.7/;
 
     my $rubies = {};
 
     for my $version (@versions) {
-        my $ruby_uri = "https://cache.ruby-lang.org/pub/ruby/$version/";
+        my $ruby_uri = $ruby_cache . $version . '/';
         my $req = HTTP::Request->new( GET => $ruby_uri );
 
         my $ua = LWP::UserAgent->new;
@@ -112,13 +114,13 @@ sub updatedb {
         if ( $res->is_success ) {
             $rubies->{$version} = [];
             for my $line (split "\n", $res->decoded_content) {
-                next unless ($line =~ m/['\"](ruby.*?)\.tar\.bz2['\"]/);
+                next unless ($line =~ m/['\"].*(ruby.*?)\.tar\.bz2['\"]/);
                 push @{ $rubies->{$version} }, ( split ' ', $1 )[-1];
             }
         }
     }
 
-    die "Did not get any data from ftp.ruby-lang.org" unless %$rubies;
+    die "Did not get any data from $ruby_cache" unless %$rubies;
 
     YAML::DumpFile( File::Spec->catfile( $self->rootdir, 'var', 'db.yml' ), $rubies );
 
@@ -460,7 +462,7 @@ sub _sub_shell {
 sub _fetch_ruby {
     my ($self, %opts) = @_;
 
-    my $url = 'ftp://ftp.ruby-lang.org/pub/ruby/' . $self->major_version . '/' . $self->ruby_version . $self->archive_type;
+    my $url = $ruby_cache . $self->major_version . '/' . $self->ruby_version . $self->archive_type;
 
     my $file = File::Spec->catfile( $self->rootdir, 'source', $self->ruby_version . $self->archive_type );
 
