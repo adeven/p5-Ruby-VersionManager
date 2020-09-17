@@ -95,6 +95,34 @@ sub _check_installed {
 
 }
 
+sub exec_with_path {
+    my ( $self, $action, @args ) = @_;
+
+    open my $fh, (join '/', cwd(), '.ruby-version');
+    my $ruby_version = <$fh>;
+    close $fh;
+
+    $self->ruby_version($ruby_version);
+    ( my $major_version = $self->ruby_version ) =~ s/(\d\.\d).*/$1/;
+    $self->major_version($major_version);
+
+    $ENV{PATH} = $self->_clean_path;
+
+    $ENV{RUBY_VERSION} = $self->ruby_version;
+    $ENV{GEM_PATH} = File::Spec->catdir( abs_path( $self->rootdir ), 'gemsets', $self->major_version, $self->ruby_version, $self->gemset );
+    $ENV{GEM_HOME} = File::Spec->catdir( abs_path( $self->rootdir ), 'gemsets', $self->major_version, $self->ruby_version, $self->gemset );
+    $ENV{MY_RUBY_HOME} = File::Spec->catdir( abs_path( $self->rootdir ), 'rubies', $self->major_version, $self->ruby_version );
+    $ENV{PATH} = File::Spec->catdir( abs_path( $self->rootdir ), 'rubies', $self->major_version, $self->ruby_version, 'bin' )
+      . ':'
+      . File::Spec->catdir( abs_path( $self->rootdir ), 'gemsets', $self->major_version, $self->ruby_version, $self->gemset, 'bin' )
+      . ':'
+      . $ENV{PATH};
+
+    system($action, @args);
+
+    return 1;
+}
+
 sub updatedb {
     my ($self) = @_;
 

@@ -42,6 +42,9 @@ my $dispatch_table = {
         $rvm->ruby_version($ruby_version);
         $rvm->install;
     },
+    exec => sub {
+        $rvm->exec_with_path(@options);
+    },
     uninstall => sub {
         my $ruby_version = shift @options;
         die "no version defined" unless $ruby_version;
